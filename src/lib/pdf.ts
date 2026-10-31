@@ -182,23 +182,25 @@ export async function buildReportPdf(round: Round, settings: OrgSettings): Promi
         y += 4.8
       }
     }
-    // Bilder, tre i bredden
+    // Bilder: ett stort bilde alene, ellers to i bredden
     const photos = (await db.photos.bulkGet(i.photoIds)).filter(Boolean)
     if (photos.length) {
       y += 2
-      const pw = (CW - 2 * 4) / 3
+      const cols = photos.length === 1 ? 1 : 2
+      const pw = (CW - (cols - 1) * 4) / cols
+      const maxH = cols === 1 ? 105 : 80
       let col = 0
       let rowH = 0
       for (const p of photos) {
-        const img = await loadImage(p!.blob)
+        const img = await loadImage(p!.blob, 1800)
         if (!img) continue
-        const ph = Math.min(pw * 0.9, (img.h / img.w) * pw)
+        const ph = Math.min(maxH, (img.h / img.w) * pw)
         const iw = (img.w / img.h) * ph
         if (col === 0) ensure(ph + 4)
         doc.addImage(img.data, img.format, M + col * (pw + 4), y, Math.min(iw, pw), ph)
         rowH = Math.max(rowH, ph)
         col++
-        if (col === 3) {
+        if (col === cols) {
           y += rowH + 4
           col = 0
           rowH = 0

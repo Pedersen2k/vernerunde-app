@@ -1,6 +1,8 @@
 import { db, uid } from '../db'
 import type { Template, TemplateIcon } from '../types'
+import { deleteRound } from './rounds'
 import { go } from './router'
+import { saveSettings } from './settings'
 
 type Seed = { name: string; icon: TemplateIcon; areas: { name: string; points: [string, string?][] }[] }
 
@@ -194,4 +196,13 @@ export const TEMPLATE_EMOJI: Record<TemplateIcon, string> = {
   bygg: '🏗️',
   kontor: '💻',
   annet: '📋',
+}
+
+/** Sletter sjekklista og pågående runde på den. Fullførte rapporter beholdes. */
+export async function removeTemplate(id: string) {
+  const rounds = await db.rounds.filter((r) => r.templateId === id && !r.finishedAt).toArray()
+  for (const r of rounds) await deleteRound(r.id)
+  await db.templates.delete(id)
+  const org = await db.settings.get('org')
+  if (org?.currentTemplateId === id) await saveSettings({ currentTemplateId: undefined })
 }

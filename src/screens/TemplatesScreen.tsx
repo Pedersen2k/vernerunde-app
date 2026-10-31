@@ -9,7 +9,7 @@ import { db, uid } from '../db'
 import { listTemplates } from '../lib/inspect'
 import { go } from '../lib/router'
 import { saveSettings, useSettings } from '../lib/settings'
-import { createTemplate, TEMPLATE_EMOJI } from '../lib/templates'
+import { createTemplate, removeTemplate, TEMPLATE_EMOJI } from '../lib/templates'
 import type { Template, TemplateArea, TemplateCheckpoint, TemplateIcon } from '../types'
 
 function QuickTags() {
@@ -75,8 +75,8 @@ export function TemplatesScreen() {
           {templates?.map((t) => {
             const points = t.areas.reduce((n, a) => n + a.checkpoints.length, 0)
             return (
-              <li key={t.id}>
-                <a href={`#/maler/${t.id}`} className="flex items-center gap-3 px-4 py-3.5 no-underline hover:bg-slate-50 dark:hover:bg-slate-700/30">
+              <li key={t.id} className="flex items-center hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                <a href={`#/maler/${t.id}`} className="flex min-w-0 flex-1 items-center gap-3 py-3.5 pl-4 no-underline">
                   <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-slate-100 text-xl dark:bg-slate-700/60">{TEMPLATE_EMOJI[t.icon ?? 'annet']}</span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-bold text-slate-900 dark:text-white">{t.name}</span>
@@ -86,6 +86,18 @@ export function TemplatesScreen() {
                   </span>
                   <CaretRight size={18} className="text-slate-400" />
                 </a>
+                <button
+                  type="button"
+                  aria-label={`Slett ${t.name}`}
+                  onClick={async () => {
+                    if (!(await ask(`Slette «${t.name}»? Pågående runde på lista forsvinner. Fullførte rapporter beholdes.`, { confirmLabel: 'Slett', danger: true }))) return
+                    await removeTemplate(t.id)
+                    toast('Sjekklisten er slettet')
+                  }}
+                  className="mr-2 grid h-11 w-11 shrink-0 place-items-center rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
+                >
+                  <Trash size={18} />
+                </button>
               </li>
             )
           })}
@@ -296,7 +308,8 @@ function Editor({ initial }: { initial: Template }) {
           className="text-red-600 dark:text-red-400"
           onClick={async () => {
             if (!(await ask(`Slette «${t.name}»? Tidligere runder beholdes.`, { confirmLabel: 'Slett', danger: true }))) return
-            await db.templates.delete(t.id)
+            await removeTemplate(t.id)
+            toast('Sjekklisten er slettet')
             go('/maler')
           }}
         >
