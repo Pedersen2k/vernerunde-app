@@ -100,11 +100,11 @@ function PdfPreview({ round, settings, onClose }: { round: Round; settings: OrgS
                 key={k}
                 type="button"
                 role="radio"
-                aria-checked={(settings.reportStyle ?? 'moderne') === k}
+                aria-checked={(settings.reportStyle ?? 'protokoll') === k}
                 onClick={() => saveSettings({ reportStyle: k })}
                 className={cx(
                   'min-h-9 flex-1 rounded-lg border text-xs font-bold',
-                  (settings.reportStyle ?? 'moderne') === k ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-slate-200 text-slate-600',
+                  (settings.reportStyle ?? 'protokoll') === k ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-slate-200 text-slate-600',
                 )}
               >
                 {label}

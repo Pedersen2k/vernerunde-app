@@ -52,7 +52,7 @@ const ORANGE: RGB = [234, 88, 12]
 
 const SEV_COLOR = { lav: STATUS_COLOR.ok, middels: STATUS_COLOR.merknad, kritisk: STATUS_COLOR.avvik }
 
-export async function buildReportPdf(round: Round, settings: OrgSettings, style: ReportStyle = settings.reportStyle ?? 'moderne'): Promise<Blob> {
+export async function buildReportPdf(round: Round, settings: OrgSettings, style: ReportStyle = settings.reportStyle ?? 'protokoll'): Promise<Blob> {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const W = 210
   const H = 297
