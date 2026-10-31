@@ -16,7 +16,7 @@ import { reportFileName } from '../lib/reportName'
 import { downloadBlob, shareOrDownload } from '../lib/share'
 import { go } from '../lib/router'
 import { deleteRound, mutateRound, roundStats } from '../lib/rounds'
-import { useSettings } from '../lib/settings'
+import { saveSettings, useSettings } from '../lib/settings'
 import type { OrgSettings, Round, Status } from '../types'
 
 const STATUS_LABEL: Record<Status, string> = { ok: 'OK', merknad: 'Merknad', avvik: 'Avvik', na: 'Ikke relevant' }
@@ -85,6 +85,31 @@ function PdfPreview({ round, settings, onClose }: { round: Round; settings: OrgS
             <Button size="sm" className="!border-slate-200 !bg-white !text-slate-800" onClick={() => run('download')} disabled={busy !== null}>
               <DownloadSimple size={18} weight="bold" /> {busy === 'download' ? 'Lager PDF…' : 'Last ned PDF'}
             </Button>
+          </div>
+
+          <div className="flex items-center gap-2 border-b border-slate-200 px-4 py-2.5" role="radiogroup" aria-label="PDF-design">
+            <span className="text-xs font-semibold text-slate-500">PDF-design</span>
+            {(
+              [
+                ['klassisk', 'Klassisk'],
+                ['moderne', 'Moderne'],
+                ['protokoll', 'Protokoll'],
+              ] as const
+            ).map(([k, label]) => (
+              <button
+                key={k}
+                type="button"
+                role="radio"
+                aria-checked={(settings.reportStyle ?? 'moderne') === k}
+                onClick={() => saveSettings({ reportStyle: k })}
+                className={cx(
+                  'min-h-9 flex-1 rounded-lg border text-xs font-bold',
+                  (settings.reportStyle ?? 'moderne') === k ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-slate-200 text-slate-600',
+                )}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
           {/* Forhåndsvisning av rapporten, alltid lys som et papirdokument */}

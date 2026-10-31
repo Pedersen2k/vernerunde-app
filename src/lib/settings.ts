@@ -25,6 +25,7 @@ export const DEFAULT_SETTINGS: OrgSettings = {
   theme: 'dark',
   designMode: 'deck',
   quickTags: DEFAULT_QUICK_TAGS,
+  reportStyle: 'moderne',
 }
 
 /** Firmaprofilen. Er `undefined` mens den lastes. */
