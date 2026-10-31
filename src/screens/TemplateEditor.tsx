@@ -2,6 +2,7 @@ import { ask } from '../components/ConfirmDialog'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useRef, useState } from 'react'
 import { Header } from '../components/Header'
+import { Icon } from '../components/Icon'
 import { db, uid } from '../db'
 import { go } from '../lib/router'
 import type { Template, TemplateArea } from '../types'
@@ -42,7 +43,7 @@ function AreaEditor({
   }
 
   return (
-    <section className="card area-editor">
+    <section className="panel area-editor">
       <div className="area-head">
         <input
           className="input input-title"
@@ -53,10 +54,10 @@ function AreaEditor({
         />
         <div className="area-tools">
           <button type="button" className="icon-btn small" onClick={() => onMove(-1)} disabled={index === 0} aria-label="Flytt opp">
-            ↑
+            <Icon name="arrowUp" size={18} />
           </button>
           <button type="button" className="icon-btn small" onClick={() => onMove(1)} disabled={index === count - 1} aria-label="Flytt ned">
-            ↓
+            <Icon name="arrowDown" size={18} />
           </button>
           <button
             type="button"
@@ -70,11 +71,12 @@ function AreaEditor({
                 onDelete()
             }}
           >
-            ✕
+            <Icon name="trash" size={18} />
           </button>
         </div>
       </div>
 
+      <span className="area-count muted small">{area.checkpoints.length} kontrollpunkter</span>
       <ol className="point-list">
         {area.checkpoints.map((c, i) => (
           <li key={c.id}>
@@ -96,7 +98,7 @@ function AreaEditor({
               disabled={i === 0}
               aria-label="Flytt punkt opp"
             >
-              ↑
+              <Icon name="arrowUp" size={16} />
             </button>
             <button
               type="button"
@@ -104,7 +106,7 @@ function AreaEditor({
               onClick={() => onChange({ ...area, checkpoints: area.checkpoints.filter((p) => p.id !== c.id) })}
               aria-label="Slett punkt"
             >
-              ✕
+              <Icon name="close" size={16} />
             </button>
           </li>
         ))}
@@ -125,8 +127,8 @@ function AreaEditor({
           placeholder="Nytt kontrollpunkt"
           enterKeyHint="done"
         />
-        <button type="submit" className="btn" disabled={!newPoint.trim()}>
-          Legg til
+        <button type="submit" className="btn btn-icon" disabled={!newPoint.trim()} aria-label="Legg til kontrollpunkt">
+          <Icon name="plus" size={20} />
         </button>
       </form>
     </section>
@@ -200,14 +202,17 @@ function Editor({ initial }: { initial: Template }) {
           className="btn btn-block"
           onClick={() => setAreas([...t.areas, { id: uid(), name: `Område ${t.areas.length + 1}`, checkpoints: [] }])}
         >
-          + Legg til område
+          <Icon name="plus" size={20} />
+          Legg til område
         </button>
 
-        <div className="button-row spaced">
+        <div className="button-row">
           <button type="button" className="btn" onClick={duplicate}>
+            <Icon name="copy" size={18} />
             Lag kopi
           </button>
-          <button type="button" className="btn btn-danger" onClick={remove}>
+          <button type="button" className="btn btn-ghost btn-danger" onClick={remove}>
+            <Icon name="trash" size={18} />
             Slett sjekkliste
           </button>
         </div>

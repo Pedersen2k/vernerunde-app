@@ -2,15 +2,17 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { CommentField } from '../components/CommentField'
 import { Header } from '../components/Header'
+import { Icon, type IconName } from '../components/Icon'
+import { Progress } from '../components/Progress'
 import { Photos } from '../components/Photos'
 import { db, uid } from '../db'
-import { mutateRound } from '../lib/rounds'
+import { mutateRound, roundStats } from '../lib/rounds'
 import type { RoundArea, RoundItem, Status } from '../types'
 
-const STATUS: { value: Status; label: string }[] = [
-  { value: 'ok', label: 'OK' },
-  { value: 'avvik', label: 'Avvik' },
-  { value: 'na', label: 'Ikke relevant' },
+const STATUS: { value: Status; label: string; icon: IconName }[] = [
+  { value: 'ok', label: 'OK', icon: 'checkCircle' },
+  { value: 'avvik', label: 'Avvik', icon: 'warning' },
+  { value: 'na', label: 'Ikke relevant', icon: 'minusCircle' },
 ]
 
 function ItemCard({
@@ -34,9 +36,10 @@ function ItemCard({
 
   return (
     <article className={`card item item-${item.status ?? 'none'}`}>
-      <p className="item-text">
-        <span className="item-num">{index + 1}.</span> {item.text}
-      </p>
+      <div className="item-head">
+        <span className="item-num">{index + 1}</span>
+        <p className="item-text">{item.text}</p>
+      </div>
       <div className="status-group" role="radiogroup" aria-label={`Status for ${item.text}`}>
         {STATUS.map((s) => (
           <button
@@ -52,6 +55,7 @@ function ItemCard({
               })
             }
           >
+            <Icon name={s.icon} size={18} stroke={2.2} />
             {s.label}
           </button>
         ))}
@@ -94,7 +98,7 @@ function ItemCard({
       ) : (
         !locked && (
           <button type="button" className="link-btn" onClick={() => setOpen(true)}>
-            + Kommentar eller bilde
+            <Icon name="comment" size={16} /> Kommentar eller bilde
           </button>
         )
       )}
@@ -119,6 +123,7 @@ export function RoundAreaScreen({ roundId, areaId }: { roundId: string; areaId: 
   const prev = round.areas[index - 1]
   const next = round.areas[index + 1]
   const locked = round.finishedAt !== null
+  const stats = roundStats([area])
 
   const updateArea = (fn: (a: RoundArea) => void) =>
     mutateRound(roundId, (r) => {
@@ -145,9 +150,15 @@ export function RoundAreaScreen({ roundId, areaId }: { roundId: string; areaId: 
     <>
       <Header
         title={area.name}
-        subtitle={`Område ${index + 1} av ${round.areas.length}${locked ? ' · Fullført' : ''}`}
+        subtitle={`Område ${index + 1} av ${round.areas.length}${locked ? ' · Låst' : ''}`}
         back={`/runde/${roundId}`}
       />
+      <div className="subbar">
+        <Progress value={stats.checked} max={stats.total} />
+        <span className="tabular">
+          {stats.checked}/{stats.total}
+        </span>
+      </div>
       <main className="content">
         {area.items.length === 0 && <p className="muted">Ingen kontrollpunkter i dette området.</p>}
         {area.items.map((item, i) => (
@@ -183,8 +194,8 @@ export function RoundAreaScreen({ roundId, areaId }: { roundId: string; areaId: 
               onChange={(e) => setNewPoint(e.target.value)}
               placeholder="Eget punkt for denne runden"
             />
-            <button type="submit" className="btn" disabled={!newPoint.trim()}>
-              Legg til
+            <button type="submit" className="btn btn-icon" disabled={!newPoint.trim()} aria-label="Legg til punkt">
+              <Icon name="plus" size={20} />
             </button>
           </form>
         )}
@@ -213,18 +224,21 @@ export function RoundAreaScreen({ roundId, areaId }: { roundId: string; areaId: 
         <div className="pager">
           {prev ? (
             <a className="btn" href={`#/runde/${roundId}/omrade/${prev.id}`}>
-              ‹ {prev.name}
+              <Icon name="back" size={18} />
+              <span className="ellipsis">{prev.name}</span>
             </a>
           ) : (
             <span />
           )}
           {next ? (
             <a className="btn btn-primary" href={`#/runde/${roundId}/omrade/${next.id}`}>
-              {next.name} ›
+              <span className="ellipsis">{next.name}</span>
+              <Icon name="chevron" size={18} />
             </a>
           ) : (
             <a className="btn btn-primary" href={`#/runde/${roundId}/oppsummering`}>
-              Til oppsummering ›
+              Til oppsummering
+              <Icon name="chevron" size={18} />
             </a>
           )}
         </div>

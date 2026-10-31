@@ -52,3 +52,13 @@ export interface Photo {
   blob: Blob
   createdAt: number
 }
+
+export interface OrgSettings {
+  key: 'org'
+  companyName: string
+  department: string
+  inspectorName: string
+  logo: Blob | null
+  accent: string
+  onboarded: boolean
+}

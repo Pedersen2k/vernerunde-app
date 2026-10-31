@@ -1,10 +1,11 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { Photo, Round, Template } from './types'
+import type { OrgSettings, Photo, Round, Template } from './types'
 
 class VernerundeDB extends Dexie {
   templates!: EntityTable<Template, 'id'>
   rounds!: EntityTable<Round, 'id'>
   photos!: EntityTable<Photo, 'id'>
+  settings!: EntityTable<OrgSettings, 'key'>
 
   constructor() {
     super('vernerunde')
@@ -13,6 +14,7 @@ class VernerundeDB extends Dexie {
       rounds: 'id, startedAt, finishedAt',
       photos: 'id, roundId',
     })
+    this.version(2).stores({ settings: 'key' })
     this.on('populate', (tx) => {
       tx.table('templates').add(exampleTemplate())
     })

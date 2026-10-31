@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { BottomNav } from '../components/BottomNav'
 import { Header } from '../components/Header'
+import { Icon } from '../components/Icon'
 import { db } from '../db'
 import { createTemplate } from '../lib/templates'
 
@@ -12,7 +13,8 @@ export function Templates() {
       <Header title="Sjekklister" subtitle="Områder og kontrollpunkter for rundene dine" />
       <main className="content">
         <button type="button" className="btn btn-primary btn-block btn-large" onClick={createTemplate}>
-          + Lag ny sjekkliste
+          <Icon name="plus" size={20} stroke={2.4} />
+          Lag ny sjekkliste
         </button>
 
         {templates?.length === 0 && (
@@ -22,17 +24,25 @@ export function Templates() {
           </div>
         )}
 
+        <div className="list">
         {templates?.map((t) => {
           const points = t.areas.reduce((n, a) => n + a.checkpoints.length, 0)
           return (
-            <a key={t.id} className="card card-link" href={`#/maler/${t.id}`}>
-              <h3>{t.name}</h3>
-              <p className="muted">
-                {t.areas.length} {t.areas.length === 1 ? 'område' : 'områder'} · {points} kontrollpunkter
-              </p>
+            <a key={t.id} className="template-row" href={`#/maler/${t.id}`}>
+              <span className="template-icon">
+                <Icon name="clipboard" size={22} />
+              </span>
+              <div className="grow">
+                <h3>{t.name}</h3>
+                <p className="muted small">
+                  {t.areas.length} {t.areas.length === 1 ? 'område' : 'områder'} · {points} kontrollpunkter
+                </p>
+              </div>
+              <Icon name="chevron" size={20} className="chev" />
             </a>
           )
         })}
+        </div>
       </main>
       <BottomNav active="maler" />
     </>

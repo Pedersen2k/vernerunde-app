@@ -1,25 +1,14 @@
 import { ask } from './ConfirmDialog'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useRef, useState } from 'react'
+import { useBlobUrl } from '../lib/useBlobUrl'
 import { db, uid } from '../db'
 import { compressImage } from '../lib/image'
-
-function useObjectUrl(blob: Blob | undefined) {
-  const [url, setUrl] = useState<string>()
-  useEffect(() => {
-    if (!blob) return
-    const u = URL.createObjectURL(blob)
-    // Objekt-URL-er må opprettes og frigjøres i en effekt.
-    // oxlint-disable-next-line react/set-state-in-effect
-    setUrl(u)
-    return () => URL.revokeObjectURL(u)
-  }, [blob])
-  return url
-}
+import { Icon } from './Icon'
 
 function Thumb({ id, onOpen }: { id: string; onOpen: (id: string) => void }) {
   const photo = useLiveQuery(() => db.photos.get(id), [id])
-  const url = useObjectUrl(photo?.blob)
+  const url = useBlobUrl(photo?.blob)
   return (
     <button type="button" className="thumb" onClick={() => onOpen(id)} aria-label="Vis bilde">
       {url ? <img src={url} alt="" /> : <span className="thumb-loading" />}
@@ -29,7 +18,7 @@ function Thumb({ id, onOpen }: { id: string; onOpen: (id: string) => void }) {
 
 function Lightbox({ id, onClose, onDelete }: { id: string; onClose: () => void; onDelete?: () => void }) {
   const photo = useLiveQuery(() => db.photos.get(id), [id])
-  const url = useObjectUrl(photo?.blob)
+  const url = useBlobUrl(photo?.blob)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
@@ -102,9 +91,7 @@ export function Photos({ roundId, photoIds, onChange }: Props) {
       {onChange && (
         <>
           <button type="button" className="thumb thumb-add" onClick={() => input.current?.click()} disabled={busy}>
-            <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
-              <path d="M4 8h3l2-3h6l2 3h3v11H4zM12 16.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-            </svg>
+            <Icon name="camera" size={24} stroke={1.8} />
             <span>{busy ? 'Lagrer…' : 'Bilde'}</span>
           </button>
           <input ref={input} type="file" accept="image/*" capture="environment" multiple hidden onChange={(e) => add(e.target.files)} />
