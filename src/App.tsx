@@ -1,41 +1,39 @@
-import { BrandStyle } from './components/BrandStyle'
+import { FindingHost, ThemeSync } from './components/AppShell'
 import { ConfirmHost } from './components/ConfirmDialog'
+import { ToastHost } from './components/Toast'
 import { useRoute } from './lib/router'
 import { useSettings } from './lib/settings'
-import { Deviations } from './screens/Deviations'
-import { Home } from './screens/Home'
-import { NewRound } from './screens/NewRound'
-import { RoundAreaScreen } from './screens/RoundAreaScreen'
-import { RoundOverview } from './screens/RoundOverview'
-import { RoundSummary } from './screens/RoundSummary'
-import { Settings } from './screens/Settings'
-import { TemplateEditor } from './screens/TemplateEditor'
-import { Templates } from './screens/Templates'
+import { DeviationsScreen } from './screens/DeviationsScreen'
+import { Overview } from './screens/Overview'
+import { ReportScreen } from './screens/ReportScreen'
+import { RoundScreen } from './screens/RoundScreen'
+import { SettingsScreen } from './screens/SettingsScreen'
+import { TemplateEditorScreen, TemplatesScreen } from './screens/TemplatesScreen'
 import { Welcome } from './screens/Welcome'
 
 export default function App() {
   return (
     <>
-      <BrandStyle />
+      <ThemeSync />
       <Screen />
+      <FindingHost />
       <ConfirmHost />
+      <ToastHost />
     </>
   )
 }
 
 function Screen() {
-  const [a, b, c, d] = useRoute()
+  const [a, b] = useRoute()
   const settings = useSettings()
 
   if (!settings) return null
   if (!settings.onboarded) return <Welcome settings={settings} />
-  if (a === 'innstillinger') return <Settings />
-  if (a === 'avvik') return <Deviations />
-  if (a === 'maler' && b) return <TemplateEditor id={b} />
-  if (a === 'maler') return <Templates />
-  if (a === 'ny') return <NewRound />
-  if (a === 'runde' && b && c === 'omrade' && d) return <RoundAreaScreen key={d} roundId={b} areaId={d} />
-  if (a === 'runde' && b && c === 'oppsummering') return <RoundSummary id={b} />
-  if (a === 'runde' && b) return <RoundOverview id={b} />
-  return <Home />
+  if (a === 'runde') return <RoundScreen key={b ?? 'aktiv'} id={b} />
+  if (a === 'rapport') return <ReportScreen key={b ?? 'siste'} id={b} />
+  if (a === 'avvik') return <DeviationsScreen />
+  if (a === 'maler' && b) return <TemplateEditorScreen key={b} id={b} />
+  if (a === 'maler') return <TemplatesScreen />
+  if (a === 'innstillinger') return <SettingsScreen />
+  return <Overview />
 }

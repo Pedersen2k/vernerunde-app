@@ -1,17 +1,26 @@
-import { ask } from './ConfirmDialog'
+import { PencilSimple, Trash, X } from '@phosphor-icons/react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { db } from '../db'
 import { useBlobUrl } from '../lib/useBlobUrl'
-import { db, uid } from '../db'
-import { compressImage } from '../lib/image'
-import { Icon } from './Icon'
+import { ask } from './ConfirmDialog'
+import { PhotoAnnotator } from './PhotoAnnotator'
+import { Button, cx } from './ui'
 
-function Thumb({ id, onOpen }: { id: string; onOpen: (id: string) => void }) {
+export function PhotoThumb({ id, onOpen, size = 'md' }: { id: string; onOpen?: (id: string) => void; size?: 'sm' | 'md' }) {
   const photo = useLiveQuery(() => db.photos.get(id), [id])
   const url = useBlobUrl(photo?.blob)
   return (
-    <button type="button" className="thumb" onClick={() => onOpen(id)} aria-label="Vis bilde">
-      {url ? <img src={url} alt="" /> : <span className="thumb-loading" />}
+    <button
+      type="button"
+      onClick={() => onOpen?.(id)}
+      aria-label="Vis bilde"
+      className={cx(
+        'shrink-0 overflow-hidden rounded-xl bg-slate-200 ring-1 ring-slate-200 dark:bg-slate-700 dark:ring-slate-600',
+        size === 'md' ? 'h-20 w-20' : 'h-12 w-12',
+      )}
+    >
+      {url && <img src={url} alt="" className="h-full w-full object-cover" />}
     </button>
   )
 }
@@ -19,85 +28,78 @@ function Thumb({ id, onOpen }: { id: string; onOpen: (id: string) => void }) {
 function Lightbox({ id, onClose, onDelete }: { id: string; onClose: () => void; onDelete?: () => void }) {
   const photo = useLiveQuery(() => db.photos.get(id), [id])
   const url = useBlobUrl(photo?.blob)
+  const [annotate, setAnnotate] = useState(false)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
+
+  if (annotate && photo) {
+    return (
+      <PhotoAnnotator
+        blob={photo.blob}
+        onCancel={() => setAnnotate(false)}
+        onSave={async (blob) => {
+          await db.photos.update(id, { blob })
+          setAnnotate(false)
+        }}
+      />
+    )
+  }
+
   return (
-    <div className="lightbox" role="dialog" aria-modal="true" onClick={onClose}>
-      {url && <img src={url} alt="Bilde av avvik" onClick={(e) => e.stopPropagation()} />}
-      <div className="lightbox-actions" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[55] flex animate-fade-in flex-col items-center justify-center gap-4 bg-black/90 p-4" onClick={onClose} role="dialog" aria-modal="true">
+      {url && <img src={url} alt="Bilde av funn" className="max-h-[75dvh] max-w-full rounded-xl" onClick={(e) => e.stopPropagation()} />}
+      <div className="flex flex-wrap justify-center gap-2" onClick={(e) => e.stopPropagation()}>
         {onDelete && (
-          <button
-            type="button"
-            className="btn btn-danger"
-            onClick={async () => {
-              if (await ask('Slette bildet?', { confirmLabel: 'Slett', danger: true })) onDelete()
-            }}
-          >
-            Slett bilde
-          </button>
+          <>
+            <Button size="sm" onClick={() => setAnnotate(true)}>
+              <PencilSimple size={18} /> Marker på bildet
+            </Button>
+            <Button
+              size="sm"
+              className="text-red-600 dark:text-red-400"
+              onClick={async () => {
+                if (await ask('Slette bildet?', { confirmLabel: 'Slett', danger: true })) onDelete()
+              }}
+            >
+              <Trash size={18} /> Slett
+            </Button>
+          </>
         )}
-        <button type="button" className="btn" onClick={onClose}>
-          Lukk
-        </button>
+        <Button size="sm" onClick={onClose}>
+          <X size={18} /> Lukk
+        </Button>
       </div>
     </div>
   )
 }
 
-interface Props {
-  roundId: string
-  photoIds: string[]
-  onChange?: (ids: string[]) => void
-}
-
-export function Photos({ roundId, photoIds, onChange }: Props) {
-  const input = useRef<HTMLInputElement>(null)
+/** Viser bildene til et punkt. Med `onChange` kan bilder slettes og markeres. */
+export function PhotoStrip({ photoIds, onChange, size }: { photoIds: string[]; onChange?: (ids: string[]) => void; size?: 'sm' | 'md' }) {
   const [open, setOpen] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
-
-  const add = async (files: FileList | null) => {
-    if (!files || !onChange) return
-    setBusy(true)
-    try {
-      const ids: string[] = []
-      for (const file of Array.from(files)) {
-        const blob = await compressImage(file)
-        const id = uid()
-        await db.photos.add({ id, roundId, blob, createdAt: Date.now() })
-        ids.push(id)
-      }
-      onChange([...photoIds, ...ids])
-    } finally {
-      setBusy(false)
-      if (input.current) input.current.value = ''
-    }
-  }
-
-  const remove = async (id: string) => {
-    if (!onChange) return
-    onChange(photoIds.filter((p) => p !== id))
-    await db.photos.delete(id)
-    setOpen(null)
-  }
-
+  if (photoIds.length === 0) return null
   return (
-    <div className="photos">
+    <div className="flex flex-wrap gap-2">
       {photoIds.map((id) => (
-        <Thumb key={id} id={id} onOpen={setOpen} />
+        <PhotoThumb key={id} id={id} onOpen={setOpen} size={size} />
       ))}
-      {onChange && (
-        <>
-          <button type="button" className="thumb thumb-add" onClick={() => input.current?.click()} disabled={busy}>
-            <Icon name="camera" size={24} stroke={1.8} />
-            <span>{busy ? 'Lagrer…' : 'Bilde'}</span>
-          </button>
-          <input ref={input} type="file" accept="image/*" capture="environment" multiple hidden onChange={(e) => add(e.target.files)} />
-        </>
+      {open && (
+        <Lightbox
+          id={open}
+          onClose={() => setOpen(null)}
+          onDelete={
+            onChange
+              ? async () => {
+                  onChange(photoIds.filter((p) => p !== open))
+                  await db.photos.delete(open)
+                  setOpen(null)
+                }
+              : undefined
+          }
+        />
       )}
-      {open && <Lightbox id={open} onClose={() => setOpen(null)} onDelete={onChange ? () => remove(open) : undefined} />}
     </div>
   )
 }

@@ -1,10 +1,12 @@
 import type { Deviation, Round, RoundArea, RoundItem, Severity } from '../types'
 
 export const SEVERITY: Record<Severity, { label: string; days: number; hint: string }> = {
-  lav: { label: 'Lav', days: 14, hint: '14 dager' },
-  middels: { label: 'Middels', days: 7, hint: '7 dager' },
+  lav: { label: 'Lav', days: 14, hint: '14 d' },
+  middels: { label: 'Middels', days: 7, hint: '7 d' },
   kritisk: { label: 'Kritisk', days: 0, hint: 'Straks' },
 }
+
+export const SEV_TONE: Record<Severity, 'green' | 'amber' | 'red'> = { lav: 'green', middels: 'amber', kritisk: 'red' }
 
 const DAY = 24 * 60 * 60 * 1000
 

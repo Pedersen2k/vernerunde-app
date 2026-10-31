@@ -1,100 +1,104 @@
+import { Plus, UploadSimple, X } from '@phosphor-icons/react'
 import { useRef, useState } from 'react'
 import { compressImage } from '../lib/image'
-import { ACCENTS, saveSettings } from '../lib/settings'
+import { saveSettings } from '../lib/settings'
 import type { OrgSettings } from '../types'
-import { Icon } from './Icon'
 import { Logo } from './Logo'
+import { Button, Card, cx, Field, inputClass } from './ui'
 
-/** Skjema for firmaprofil: navn, avdeling, logo, farge og verneombudets navn. */
+/** Firmaprofil: navn, avdeling, logo, verneombud, leder og liste over ansvarlige. */
 export function OrgForm({ settings }: { settings: OrgSettings }) {
   const file = useRef<HTMLInputElement>(null)
   const [busy, setBusy] = useState(false)
+  const [newResp, setNewResp] = useState('')
 
   const upload = async (files: FileList | null) => {
     const f = files?.[0]
     if (!f) return
     setBusy(true)
     try {
-      const blob = f.type === 'image/svg+xml' ? f : await compressImage(f, 512, 0.92, 'image/png')
-      await saveSettings({ logo: blob })
+      await saveSettings({ logo: await compressImage(f, 512, 0.92, 'image/png') })
     } finally {
       setBusy(false)
       if (file.current) file.current.value = ''
     }
   }
 
+  const addResp = () => {
+    const v = newResp.trim()
+    if (!v) return
+    saveSettings({ responsibles: [...settings.responsibles, v] })
+    setNewResp('')
+  }
+
   return (
-    <div className="org-form">
-      <div className="logo-picker">
-        <Logo settings={settings} size={88} className="logo-large" />
-        <div className="logo-picker-text">
-          <strong>Firmalogo</strong>
-          <span className="muted small">Vises på forsiden og i rapportene. PNG med gjennomsiktig bakgrunn blir finest.</span>
-          <div className="button-row">
-            <button type="button" className="btn btn-small" onClick={() => file.current?.click()} disabled={busy}>
-              <Icon name="upload" size={18} />
-              {busy ? 'Laster opp…' : settings.logo ? 'Bytt logo' : 'Last opp logo'}
-            </button>
+    <div className="flex flex-col gap-4">
+      <Card className="flex items-center gap-4">
+        <Logo settings={settings} size={76} className="!rounded-2xl" />
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <p className="font-bold text-slate-900 dark:text-white">Firmalogo</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Vises i appen og øverst i PDF-rapportene. PNG med gjennomsiktig bakgrunn blir finest.</p>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => file.current?.click()} disabled={busy}>
+              <UploadSimple size={16} weight="bold" /> {busy ? 'Laster opp…' : settings.logo ? 'Bytt logo' : 'Last opp logo'}
+            </Button>
             {settings.logo && (
-              <button type="button" className="btn btn-small btn-ghost" onClick={() => saveSettings({ logo: null })}>
+              <Button size="sm" variant="ghost" onClick={() => saveSettings({ logo: null })}>
                 Fjern
-              </button>
+              </Button>
             )}
           </div>
         </div>
         <input ref={file} id="logo-file" type="file" accept="image/*" hidden onChange={(e) => upload(e.target.files)} />
+      </Card>
+
+      <Field label="Firmanavn">
+        <input id="org-name" className={inputClass} defaultValue={settings.companyName} placeholder="F.eks. Nordlys Logistikk AS" onBlur={(e) => saveSettings({ companyName: e.target.value.trim() })} />
+      </Field>
+      <Field label="Avdeling eller arbeidssted">
+        <input id="org-dept" className={inputClass} defaultValue={settings.department} placeholder="F.eks. Terminal Nord" onBlur={(e) => saveSettings({ department: e.target.value.trim() })} />
+      </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Ditt navn (verneombud)">
+          <input id="org-inspector" className={inputClass} defaultValue={settings.inspectorName} placeholder="F.eks. Ola Nordmann" onBlur={(e) => saveSettings({ inspectorName: e.target.value.trim() })} />
+        </Field>
+        <Field label="Leder / HMS-ansvarlig">
+          <input id="org-manager" className={inputClass} defaultValue={settings.managerName} placeholder="F.eks. Kari Hansen" onBlur={(e) => saveSettings({ managerName: e.target.value.trim() })} />
+        </Field>
       </div>
 
-      <label className="field">
-        <span className="field-label">Firmanavn</span>
-        <input
-          id="org-name"
-          className="input"
-          defaultValue={settings.companyName}
-          placeholder="F.eks. Nordlys Logistikk AS"
-          onBlur={(e) => saveSettings({ companyName: e.target.value.trim() })}
-        />
-      </label>
-      <label className="field">
-        <span className="field-label">Avdeling eller arbeidssted</span>
-        <input
-          id="org-dept"
-          className="input"
-          defaultValue={settings.department}
-          placeholder="F.eks. Terminal Nord"
-          onBlur={(e) => saveSettings({ department: e.target.value.trim() })}
-        />
-      </label>
-      <label className="field">
-        <span className="field-label">Ditt navn (verneombud)</span>
-        <input
-          id="org-inspector"
-          className="input"
-          defaultValue={settings.inspectorName}
-          placeholder="Brukes som deltaker på nye runder"
-          onBlur={(e) => saveSettings({ inspectorName: e.target.value.trim() })}
-        />
-      </label>
-
-      <fieldset className="field accent-field">
-        <legend className="field-label">Firmafarge</legend>
-        <div className="swatches">
-          {ACCENTS.map((a) => (
-            <button
-              key={a.value}
-              type="button"
-              className={`swatch ${settings.accent === a.value ? 'on' : ''}`}
-              style={{ background: a.value }}
-              onClick={() => saveSettings({ accent: a.value })}
-              aria-label={a.name}
-              aria-pressed={settings.accent === a.value}
-              title={a.name}
-            >
-              {settings.accent === a.value && <Icon name="check" size={20} stroke={3} />}
-            </button>
-          ))}
-        </div>
-      </fieldset>
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">Personer som kan få ansvar for avvik</span>
+        {settings.responsibles.length > 0 && (
+          <ul className="flex flex-wrap gap-2">
+            {settings.responsibles.map((r, i) => (
+              <li key={`${r}-${i}`} className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white py-1 pl-3 pr-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100">
+                {r}
+                <button
+                  type="button"
+                  aria-label={`Fjern ${r}`}
+                  onClick={() => saveSettings({ responsibles: settings.responsibles.filter((_, k) => k !== i) })}
+                  className="grid h-6 w-6 place-items-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-red-500 dark:hover:bg-slate-700"
+                >
+                  <X size={12} weight="bold" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault()
+            addResp()
+          }}
+        >
+          <input id="org-resp" className={inputClass} value={newResp} onChange={(e) => setNewResp(e.target.value)} placeholder="F.eks. Per Berg (skiftleder)" />
+          <Button type="submit" className={cx('!w-12 shrink-0 !px-0')} disabled={!newResp.trim()} aria-label="Legg til person">
+            <Plus size={20} weight="bold" />
+          </Button>
+        </form>
+      </div>
     </div>
   )
 }

@@ -13,6 +13,8 @@ export interface Deviation {
 export interface TemplateCheckpoint {
   id: string
   text: string
+  /** Veiledende henvisning til lov, forskrift eller standard. */
+  law?: string
 }
 
 export interface TemplateArea {
@@ -24,14 +26,18 @@ export interface TemplateArea {
 export interface Template {
   id: string
   name: string
+  icon?: TemplateIcon
   areas: TemplateArea[]
   createdAt: number
   updatedAt: number
 }
 
+export type TemplateIcon = 'lager' | 'bygg' | 'kontor' | 'annet'
+
 export interface RoundItem {
   id: string
   text: string
+  law?: string
   status: Status | null
   comment: string
   photoIds: string[]
@@ -45,9 +51,17 @@ export interface RoundArea {
   items: RoundItem[]
 }
 
+export interface Signature {
+  name: string
+  /** PNG som data-URL. */
+  image: string
+  signedAt: number
+}
+
 export interface Round {
   id: string
   templateId: string
+  templateName?: string
   title: string
   location: string
   participants: string
@@ -55,6 +69,7 @@ export interface Round {
   finishedAt: number | null
   summary: string
   areas: RoundArea[]
+  signatures?: { inspector?: Signature; manager?: Signature }
 }
 
 export interface Photo {
@@ -69,7 +84,9 @@ export interface OrgSettings {
   companyName: string
   department: string
   inspectorName: string
+  managerName: string
+  responsibles: string[]
   logo: Blob | null
-  accent: string
   onboarded: boolean
+  theme: 'dark' | 'light'
 }

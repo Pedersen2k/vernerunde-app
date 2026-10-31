@@ -2,10 +2,17 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// SINGLE_FILE=1 bygger én samlet fil uten service worker, brukt til prøveversjonen.
+const single = process.env.SINGLE_FILE === '1'
+
 export default defineConfig({
+  build: {
+    chunkSizeWarningLimit: 700,
+    ...(single ? { outDir: 'dist-single', rollupOptions: { output: { inlineDynamicImports: true } } } : {}),
+  },
   plugins: [
     react(),
-    VitePWA({
+    !single && VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png'],
       manifest: {
@@ -14,7 +21,7 @@ export default defineConfig({
         description: 'Gjennomfør vernerunder med egne sjekklister, bilder av avvik og rapport.',
         lang: 'nb',
         theme_color: '#0f5c4d',
-        background_color: '#f5f7f6',
+        background_color: '#0f172a',
         display: 'standalone',
         start_url: '/',
         icons: [
