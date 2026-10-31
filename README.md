@@ -1,32 +1,33 @@
-# React + TypeScript + Vite
+# Vernerunde
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+En app for verneombud som gjennomfører vernerunder. Brukeren lager egne sjekklister med områder og kontrollpunkter, går runden på mobilen, registrerer OK, avvik eller ikke relevant, og legger ved bilder og kommentarer.
 
-Currently, two official plugins are available:
+Appen er laget som en webapp (PWA) som virker uten nett og kan legges på hjemskjermen. Den samme koden skal senere pakkes som app for Google Play.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Dette kan appen nå
 
-## React Compiler
+- Lage, redigere, kopiere og slette sjekklister med områder og kontrollpunkter
+- Starte en vernerunde fra en sjekkliste, med tittel, sted og deltakere
+- Merke hvert punkt som OK, avvik eller ikke relevant
+- Ta bilde og skrive kommentar på et punkt, og legge til egne punkter underveis
+- Se fremdrift per område og en oppsummering med alle avvik
+- Fullføre runden, og åpne den igjen ved behov
+- Alt lagres lokalt på enheten (IndexedDB) og virker uten nett
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Kommer
 
-## Expanding the Oxlint configuration
+- Rapport som PDF, deling på e-post
+- Oppfølging av tiltak med ansvarlig og frist
+- Innlogging og synk mellom enheter
+- Android-app for Google Play
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Utvikling
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev      # utviklingsserver
+npm run build    # bygg for produksjon
+npm run lint     # kodesjekk
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Teknologi: React, TypeScript, Vite, Dexie (IndexedDB) og vite-plugin-pwa.
