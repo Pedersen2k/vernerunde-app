@@ -1,3 +1,4 @@
+import { ask } from '../components/ConfirmDialog'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useRef, useState } from 'react'
 import { Header } from '../components/Header'
@@ -61,8 +62,12 @@ function AreaEditor({
             type="button"
             className="icon-btn small danger"
             aria-label="Slett område"
-            onClick={() => {
-              if (area.checkpoints.length === 0 || confirm(`Slette området «${area.name}» med alle punktene?`)) onDelete()
+            onClick={async () => {
+              if (
+                area.checkpoints.length === 0 ||
+                (await ask(`Slette området «${area.name}» med alle punktene?`, { confirmLabel: 'Slett', danger: true }))
+              )
+                onDelete()
             }}
           >
             ✕
@@ -163,7 +168,7 @@ function Editor({ initial }: { initial: Template }) {
   }
 
   const remove = async () => {
-    if (!confirm(`Slette sjekklisten «${t.name}»? Tidligere vernerunder beholdes.`)) return
+    if (!(await ask(`Slette sjekklisten «${t.name}»? Tidligere vernerunder beholdes.`, { confirmLabel: 'Slett', danger: true }))) return
     await db.templates.delete(t.id)
     go('/maler')
   }

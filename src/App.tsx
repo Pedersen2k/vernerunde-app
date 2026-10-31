@@ -1,3 +1,4 @@
+import { ConfirmHost } from './components/ConfirmDialog'
 import { useRoute } from './lib/router'
 import { Home } from './screens/Home'
 import { NewRound } from './screens/NewRound'
@@ -8,6 +9,15 @@ import { TemplateEditor } from './screens/TemplateEditor'
 import { Templates } from './screens/Templates'
 
 export default function App() {
+  return (
+    <>
+      <Screen />
+      <ConfirmHost />
+    </>
+  )
+}
+
+function Screen() {
   const [a, b, c, d] = useRoute()
 
   if (a === 'maler' && b) return <TemplateEditor id={b} />

@@ -1,3 +1,4 @@
+import { ask } from './ConfirmDialog'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useRef, useState } from 'react'
 import { db, uid } from '../db'
@@ -42,8 +43,8 @@ function Lightbox({ id, onClose, onDelete }: { id: string; onClose: () => void; 
           <button
             type="button"
             className="btn btn-danger"
-            onClick={() => {
-              if (confirm('Slette bildet?')) onDelete()
+            onClick={async () => {
+              if (await ask('Slette bildet?', { confirmLabel: 'Slett', danger: true })) onDelete()
             }}
           >
             Slett bilde

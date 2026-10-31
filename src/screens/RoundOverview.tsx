@@ -1,3 +1,4 @@
+import { ask } from '../components/ConfirmDialog'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Header } from '../components/Header'
 import { Progress } from '../components/Progress'
@@ -21,7 +22,7 @@ export function RoundOverview({ id }: { id: string }) {
   const s = roundStats(round.areas)
 
   const remove = async () => {
-    if (!confirm(`Slette «${round.title}» med alle bilder? Dette kan ikke angres.`)) return
+    if (!(await ask(`Slette «${round.title}» med alle bilder? Dette kan ikke angres.`, { confirmLabel: 'Slett', danger: true }))) return
     await deleteRound(round.id)
     go('/')
   }

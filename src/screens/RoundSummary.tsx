@@ -1,3 +1,4 @@
+import { ask } from '../components/ConfirmDialog'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { CommentField } from '../components/CommentField'
 import { Header } from '../components/Header'
@@ -30,14 +31,14 @@ export function RoundSummary({ id }: { id: string }) {
       unchecked > 0
         ? `${unchecked} punkter er ikke sjekket. Vil du fullføre runden likevel?`
         : 'Fullføre runden? Etter dette kan den ikke endres.'
-    if (!confirm(msg)) return
+    if (!(await ask(msg, { confirmLabel: 'Fullfør' }))) return
     await mutateRound(id, (r) => {
       r.finishedAt = Date.now()
     })
   }
 
   const reopen = async () => {
-    if (!confirm('Åpne runden for endringer igjen?')) return
+    if (!(await ask('Åpne runden for endringer igjen?', { confirmLabel: 'Åpne' }))) return
     await mutateRound(id, (r) => {
       r.finishedAt = null
     })

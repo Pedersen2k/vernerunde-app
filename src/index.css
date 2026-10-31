@@ -46,6 +46,28 @@
   }
 }
 
+:root[data-theme='dark'] {
+  --bg: #0f1513;
+  --surface: #18201d;
+  --surface-2: #212b27;
+  --text: #e8eeeb;
+  --muted: #9aa8a2;
+  --border: #2d3934;
+  --primary: #3fae93;
+  --primary-hover: #52c2a6;
+  --primary-text: #08120f;
+  --topbar: #12362e;
+  --topbar-text: #e8eeeb;
+  --ok: #5cc98a;
+  --ok-bg: #173325;
+  --avvik: #ff8a7a;
+  --avvik-bg: #3a1c19;
+  --na: #a9b4bb;
+  --na-bg: #262e33;
+  --shadow: none;
+  color-scheme: dark;
+}
+
 * { box-sizing: border-box; }
 
 html, body { margin: 0; }
@@ -270,3 +292,17 @@ textarea { resize: vertical; line-height: 1.4; }
 .meta dd { margin: 0; }
 .deviation { border-left: 5px solid var(--avvik); }
 .deviation > a { text-decoration: none; font-weight: 600; }
+
+/* Bekreftelsesdialog */
+.btn-danger-solid { background: var(--avvik); border-color: var(--avvik); color: var(--surface); }
+.dialog-backdrop {
+  position: fixed; inset: 0; z-index: 60; background: rgb(0 0 0 / 45%);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 16px max(16px, env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+.dialog {
+  width: 100%; max-width: 420px; background: var(--surface); border-radius: 18px;
+  padding: 20px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 10px 40px rgb(0 0 0 / 25%);
+}
+.dialog p { font-size: 1.02rem; }
+@media (min-width: 600px) { .dialog-backdrop { align-items: center; } }
