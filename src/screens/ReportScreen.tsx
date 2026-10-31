@@ -51,11 +51,10 @@ function PdfPreview({ round, settings, onClose }: { round: Round; settings: OrgS
       const { buildReportPdf, downloadBlob, shareOrDownload } = await import('../lib/pdf')
       const blob = await buildReportPdf(round, settings)
       if (kind === 'download') {
-        downloadBlob(blob, filename)
-        toast('PDF-rapporten er lastet ned')
+        if (await downloadBlob(blob, filename)) toast('PDF-rapporten er lagret')
       } else {
         const r = await shareOrDownload(blob, filename, `Vernerunderapport: ${round.title}`)
-        if (r === 'downloaded') toast('Deling støttes ikke her, så PDF-en ble lastet ned')
+        if (r === 'downloaded') toast('Deling støttes ikke her, så PDF-en ble lagret i stedet')
         if (r === 'shared') toast('Rapporten er delt')
       }
     } catch {
