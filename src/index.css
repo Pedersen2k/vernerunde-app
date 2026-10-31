@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-slate-50 font-sans text-slate-900 antialiased dark:bg-oled dark:text-slate-100;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-orange-500 ring-offset-2 ring-offset-white dark:ring-offset-oled;
+  }
+  a {
+    @apply text-inherit;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
