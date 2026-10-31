@@ -167,7 +167,6 @@ function AreaEditor({ area, index, count, onChange, onMove, onDelete }: { area: 
     if (!text.trim()) return
     onChange({ ...area, checkpoints: [...area.checkpoints, { id: uid(), text: text.trim() }] })
     setText('')
-    ref.current?.focus()
   }
   return (
     <Card className="flex flex-col gap-3">
@@ -209,7 +208,7 @@ function AreaEditor({ area, index, count, onChange, onMove, onDelete }: { area: 
           add()
         }}
       >
-        <input ref={ref} id={`new-${area.id}`} className={inputClass} value={text} onChange={(e) => setText(e.target.value)} placeholder="Nytt sjekkpunkt" enterKeyHint="done" />
+        <input ref={ref} id={`new-${area.id}`} className={inputClass} value={text} onChange={(e) => setText(e.target.value)} onBlur={add} placeholder="Nytt sjekkpunkt" enterKeyHint="done" />
         <Button type="submit" className="!w-12 shrink-0 !px-0" disabled={!text.trim()} aria-label="Legg til sjekkpunkt">
           <Plus size={20} weight="bold" />
         </Button>
@@ -222,20 +221,33 @@ function Editor({ initial }: { initial: Template }) {
   const [t, setT] = useState(initial)
   const [saved, setSaved] = useState(true)
   const first = useRef(true)
+  const latest = useRef(initial)
+  const dirty = useRef(false)
 
   useEffect(() => {
     if (first.current) {
       first.current = false
       return
     }
+    latest.current = t
+    dirty.current = true
     // oxlint-disable-next-line react/set-state-in-effect
     setSaved(false)
     const timer = window.setTimeout(async () => {
+      dirty.current = false
       await db.templates.put({ ...t, updatedAt: Date.now() })
       setSaved(true)
     }, 400)
     return () => window.clearTimeout(timer)
   }, [t])
+
+  // Lagrer ventende endringer når man forlater siden før autolagringen har kjørt.
+  useEffect(
+    () => () => {
+      if (dirty.current) void db.templates.put({ ...latest.current, updatedAt: Date.now() })
+    },
+    [],
+  )
 
   const setAreas = (areas: TemplateArea[]) => setT((p) => ({ ...p, areas }))
 

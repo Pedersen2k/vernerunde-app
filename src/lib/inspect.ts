@@ -43,6 +43,8 @@ export function useInspect() {
 
   useEffect(() => {
     if (template && settings && round === null) void ensureRound(template, settings)
+    // En urørt runde følger sjekklista: nye punkter og soner kommer med uten nullstilling.
+    if (template && settings && round && isUntouched(round) && !sameStructure(round, template)) void restartRound(round, settings)
   }, [template, settings, round])
 
   return { settings, templates, template, round }
@@ -69,4 +71,14 @@ export async function reopenRound(round: Round) {
   }
   await mutateRound(round.id, (r) => void (r.finishedAt = null))
   return true
+}
+
+function isUntouched(round: Round) {
+  return round.areas.every((a) => a.items.every((i) => !i.status))
+}
+
+function sameStructure(round: Round, template: Template) {
+  const a = round.areas.map((x) => `${x.name}|${x.items.map((i) => i.text).join('¦')}`).join('\n')
+  const b = template.areas.map((x) => `${x.name}|${x.checkpoints.map((c) => c.text).join('¦')}`).join('\n')
+  return a === b
 }
