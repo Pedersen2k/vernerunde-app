@@ -1,7 +1,9 @@
-import { ArrowCounterClockwise, Check } from '@phosphor-icons/react'
+import { ArrowCounterClockwise, Check, EnvelopeSimple } from '@phosphor-icons/react'
 import { dueLabel, isOverdue, SEV_TONE, SEVERITY, type DeviationRef } from '../lib/deviations'
 import { formatDate } from '../lib/format'
+import { deviationMail } from '../lib/mail'
 import { mutateItem } from '../lib/rounds'
+import { useSettings } from '../lib/settings'
 import { ask } from './ConfirmDialog'
 import { PhotoStrip } from './Photos'
 import { toast } from './Toast'
@@ -16,6 +18,7 @@ async function setResolved(d: DeviationRef, resolved: boolean) {
 }
 
 export function DeviationCard({ d, now, showPhotos }: { d: DeviationRef; now: number; showPhotos?: boolean }) {
+  const settings = useSettings()
   const late = isOverdue(d.deviation, now)
   const resolved = d.deviation.resolvedAt !== null
   return (
@@ -55,6 +58,19 @@ export function DeviationCard({ d, now, showPhotos }: { d: DeviationRef; now: nu
         )}
       </div>
       {showPhotos && <PhotoStrip photoIds={d.item.photoIds} size="sm" />}
+      {late && (
+        <p className="rounded-xl bg-red-50 p-2.5 text-xs leading-relaxed text-red-800 dark:bg-red-500/10 dark:text-red-300">
+          Fristen er passert. Send en skriftlig påminnelse til leder, og ta saken med hovedverneombud eller opp i AMU hvis den ikke lukkes.
+        </p>
+      )}
+      {!resolved && settings && (
+        <a
+          href={deviationMail(d, settings).href}
+          className="inline-flex min-h-10 items-center justify-center gap-1.5 self-start rounded-xl border border-slate-200 px-3 text-xs font-bold text-slate-700 no-underline dark:border-slate-700 dark:text-slate-200"
+        >
+          <EnvelopeSimple size={16} weight="bold" /> {late ? 'Send påminnelse til leder' : 'Meld til leder på e-post'}
+        </a>
+      )}
     </Card>
   )
 }

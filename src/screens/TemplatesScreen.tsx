@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, CaretRight, Copy, Plus, Scales, Trash, X } from '@phosphor-icons/react'
+import { ArrowDown, ArrowUp, CaretRight, Copy, Lightning, Plus, Scales, Trash, X } from '@phosphor-icons/react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useRef, useState } from 'react'
 import { AppShell } from '../components/AppShell'
@@ -6,17 +6,66 @@ import { ask } from '../components/ConfirmDialog'
 import { toast } from '../components/Toast'
 import { Button, Card, cx, Field, inputClass } from '../components/ui'
 import { db, uid } from '../db'
+import { listTemplates } from '../lib/inspect'
 import { go } from '../lib/router'
+import { saveSettings, useSettings } from '../lib/settings'
 import { createTemplate, TEMPLATE_EMOJI } from '../lib/templates'
 import type { Template, TemplateArea, TemplateCheckpoint, TemplateIcon } from '../types'
 
-export function TemplatesScreen() {
-  const templates = useLiveQuery(() => db.templates.orderBy('updatedAt').reverse().toArray(), [])
+function QuickTags() {
+  const settings = useSettings()
+  const [tag, setTag] = useState('')
+  if (!settings) return null
+  const add = () => {
+    const v = tag.trim()
+    if (!v || settings.quickTags.includes(v)) return
+    saveSettings({ quickTags: [...settings.quickTags, v] })
+    setTag('')
+  }
   return (
-    <AppShell tab="none">
+    <Card className="flex flex-col gap-3">
       <div>
-        <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Sjekklister</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">Bransjemaler og dine egne sjekklister. Alt kan endres.</p>
+        <h2 className="flex items-center gap-2 font-display text-[0.95rem] font-extrabold text-slate-900 dark:text-white">
+          <Lightning size={18} weight="fill" className="text-orange-500" /> Hurtig-etiketter
+        </h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400">Brukes i «Kamera-først» og som hurtigtekst når du registrerer avvik.</p>
+      </div>
+      <div className="flex gap-2">
+        <input
+          id="new-tag"
+          className={inputClass}
+          value={tag}
+          onChange={(e) => setTag(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && add()}
+          placeholder="Ny etikett, f.eks. Defekt jekketralle"
+        />
+        <Button variant="primary" onClick={add} disabled={!tag.trim()} aria-label="Legg til etikett">
+          <Plus size={18} weight="bold" />
+        </Button>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {settings.quickTags.map((t) => (
+          <span key={t} className="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-slate-100 py-1 pl-2.5 pr-1 text-xs font-bold text-slate-700 dark:border-slate-700 dark:bg-cardElevated dark:text-slate-300">
+            {t}
+            <button type="button" aria-label={`Fjern ${t}`} onClick={() => saveSettings({ quickTags: settings.quickTags.filter((x) => x !== t) })} className="grid h-7 w-7 place-items-center rounded-lg text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700">
+              <X size={14} weight="bold" />
+            </button>
+          </span>
+        ))}
+        {settings.quickTags.length === 0 && <p className="text-xs text-slate-500">Ingen etiketter. Legg til de vanligste funnene dine.</p>}
+      </div>
+    </Card>
+  )
+}
+
+export function TemplatesScreen() {
+  const templates = useLiveQuery(listTemplates, [])
+  return (
+    <AppShell tab="maler">
+      <div>
+        <p className="text-[0.65rem] font-extrabold uppercase tracking-wider text-orange-600 dark:text-orange-400">Tilpass</p>
+        <h1 className="font-display text-xl font-extrabold text-slate-900 dark:text-white">Sjekklister og soner</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400">Bransjemaler og dine egne sjekklister. Endringer lagres på telefonen og vises i alle tre visningene.</p>
       </div>
       <Button variant="primary" size="lg" block onClick={createTemplate}>
         <Plus size={22} weight="bold" /> Lag ny sjekkliste
@@ -42,6 +91,7 @@ export function TemplatesScreen() {
           })}
         </ul>
       </Card>
+      <QuickTags />
     </AppShell>
   )
 }
@@ -178,7 +228,7 @@ function Editor({ initial }: { initial: Template }) {
   const setAreas = (areas: TemplateArea[]) => setT((p) => ({ ...p, areas }))
 
   return (
-    <AppShell tab="none">
+    <AppShell tab="maler">
       <div className="flex items-center justify-between">
         <a href="#/maler" className="text-sm font-semibold text-orange-600 dark:text-orange-500">
           ‹ Sjekklister

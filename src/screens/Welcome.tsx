@@ -11,12 +11,12 @@ export function Welcome({ settings }: { settings: OrgSettings }) {
   }
   return (
     <div className="min-h-dvh">
-      <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 pb-8 pt-[calc(40px+env(safe-area-inset-top,0px))] text-white">
+      <div className="bg-gradient-to-br from-oled via-slate-900 to-cardDark pb-8 pt-[calc(40px+env(safe-area-inset-top,0px))] text-white">
         <div className="mx-auto max-w-2xl pl-[max(16px,env(safe-area-inset-left,0px))] pr-[max(16px,env(safe-area-inset-right,0px))]">
           <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg shadow-orange-600/40">
             <ShieldCheck size={34} weight="fill" />
           </div>
-          <h1 className="mt-5 text-3xl font-extrabold tracking-tight">Velkommen til Vernerunde</h1>
+          <h1 className="mt-5 font-display text-3xl font-extrabold tracking-tight">Velkommen til Vernerunde</h1>
           <p className="mt-2 max-w-md text-slate-300">
             Gjennomfør vernerunder på mobilen, dokumenter avvik med bilde, og lag signert PDF-rapport på stedet. Start med firmaprofilen. Du kan endre den senere.
           </p>

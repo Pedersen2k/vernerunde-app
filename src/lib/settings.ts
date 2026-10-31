@@ -2,6 +2,17 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
 import type { OrgSettings } from '../types'
 
+export const DEFAULT_QUICK_TAGS = [
+  'Blokkert kjørebane',
+  'Paller utenfor oppmerket felt',
+  'Skadet pallereol / stolpevern',
+  'Blokkert nødutgang / brannutstyr',
+  'Krympeplast / avfall på gulv',
+  'Mangler gulvmerking',
+  'Feil ved trucklading',
+  'Skade på port / lasterampe',
+]
+
 export const DEFAULT_SETTINGS: OrgSettings = {
   key: 'org',
   companyName: '',
@@ -12,6 +23,8 @@ export const DEFAULT_SETTINGS: OrgSettings = {
   logo: null,
   onboarded: false,
   theme: 'dark',
+  designMode: 'deck',
+  quickTags: DEFAULT_QUICK_TAGS,
 }
 
 /** Firmaprofilen. Er `undefined` mens den lastes. */

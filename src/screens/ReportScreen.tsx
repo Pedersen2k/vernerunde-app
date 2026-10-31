@@ -1,4 +1,4 @@
-import { ClipboardText, DownloadSimple, FilePdf, LockOpen, NotePencil, PaperPlaneTilt, Seal, Signature as SignatureIcon, X } from '@phosphor-icons/react'
+import { ClipboardText, ClockCounterClockwise, DownloadSimple, Trash, FilePdf, LockOpen, NotePencil, PaperPlaneTilt, Seal, Signature as SignatureIcon, X } from '@phosphor-icons/react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { AppShell } from '../components/AppShell'
@@ -7,12 +7,15 @@ import { Logo } from '../components/Logo'
 import { PhotoStrip } from '../components/Photos'
 import { SignaturePad } from '../components/SignaturePad'
 import { toast } from '../components/Toast'
-import { Button, Card, cx, Empty, Field, inputClass, LinkButton, Pill, SectionTitle } from '../components/ui'
+import { Button, Card, cx, Empty, Field, inputClass, Pill, SectionTitle } from '../components/ui'
 import { db } from '../db'
 import { dueLabel, SEV_TONE, SEVERITY } from '../lib/deviations'
 import { formatDate, formatDateTime } from '../lib/format'
+import { reopenRound } from '../lib/inspect'
 import { reportFileName } from '../lib/reportName'
-import { mutateRound, roundStats } from '../lib/rounds'
+import { downloadBlob, shareOrDownload } from '../lib/share'
+import { go } from '../lib/router'
+import { deleteRound, mutateRound, roundStats } from '../lib/rounds'
 import { useSettings } from '../lib/settings'
 import type { OrgSettings, Round, Status } from '../types'
 
@@ -48,7 +51,7 @@ function PdfPreview({ round, settings, onClose }: { round: Round; settings: OrgS
   const run = async (kind: 'share' | 'download') => {
     setBusy(kind)
     try {
-      const { buildReportPdf, downloadBlob, shareOrDownload } = await import('../lib/pdf')
+      const { buildReportPdf } = await import('../lib/pdf')
       const blob = await buildReportPdf(round, settings)
       if (kind === 'download') {
         if (await downloadBlob(blob, filename)) toast('PDF-rapporten er lagret')
@@ -195,8 +198,9 @@ export function ReportScreen({ id }: { id?: string }) {
   const [preview, setPreview] = useState(false)
   const round = useLiveQuery(async () => {
     if (id) return (await db.rounds.get(id)) ?? null
+    const org = await db.settings.get('org')
     const all = (await db.rounds.orderBy('startedAt').reverse().toArray()).filter((r) => r.templateId)
-    return all.find((r) => !r.finishedAt) ?? all[0] ?? null
+    return all.find((r) => !r.finishedAt && (!org?.currentTemplateId || r.templateId === org.currentTemplateId)) ?? all.find((r) => !r.finishedAt) ?? all[0] ?? null
   }, [id])
 
   if (round === undefined || !settings) return <AppShell tab="rapport">{null}</AppShell>
@@ -225,7 +229,8 @@ export function ReportScreen({ id }: { id?: string }) {
     const msg = missing.length ? `${missing.join(' og ')}. Vil du fullføre likevel?` : 'Fullføre runden og låse rapporten?'
     if (!(await ask(msg.charAt(0).toUpperCase() + msg.slice(1), { confirmLabel: 'Fullfør' }))) return
     await update((r) => void (r.finishedAt = Date.now()))
-    toast('Vernerunden er fullført')
+    go(`/rapport/${round.id}`)
+    toast('Vernerunden er fullført og lagret i arkivet')
     setPreview(true)
   }
 
@@ -265,8 +270,8 @@ export function ReportScreen({ id }: { id?: string }) {
           icon={<ClipboardText size={20} weight="bold" className="text-orange-500" />}
           action={
             !locked && (
-              <a href={`#/runde/${round.id}`} className="text-sm font-semibold text-orange-600 dark:text-orange-500">
-                + Endre sjekkliste
+              <a href="#/" className="text-sm font-semibold text-orange-600 dark:text-orange-500">
+                Tilbake til runden
               </a>
             )
           }
@@ -312,16 +317,16 @@ export function ReportScreen({ id }: { id?: string }) {
         ) : (
           <>
             <Field label="Tittel">
-              <SaveOnBlur id="r-title" value={round.title} onSave={(v) => update((r) => void (r.title = v.trim() || r.title))} />
+              <SaveOnBlur key={`${round.id}-r-title`} id="r-title" value={round.title} onSave={(v) => update((r) => void (r.title = v.trim() || r.title))} />
             </Field>
             <Field label="Sted eller avdeling">
-              <SaveOnBlur id="r-location" value={round.location} onSave={(v) => update((r) => void (r.location = v.trim()))} placeholder="F.eks. Terminal Nord" />
+              <SaveOnBlur key={`${round.id}-r-location`} id="r-location" value={round.location} onSave={(v) => update((r) => void (r.location = v.trim()))} placeholder="F.eks. Terminal Nord" />
             </Field>
             <Field label="Deltakere">
-              <SaveOnBlur id="r-participants" value={round.participants} onSave={(v) => update((r) => void (r.participants = v.trim()))} placeholder="F.eks. verneombud, avdelingsleder" />
+              <SaveOnBlur key={`${round.id}-r-participants`} id="r-participants" value={round.participants} onSave={(v) => update((r) => void (r.participants = v.trim()))} placeholder="F.eks. verneombud, avdelingsleder" />
             </Field>
             <Field label="Oppsummering">
-              <SaveOnBlur id="r-summary" multiline value={round.summary} onSave={(v) => update((r) => void (r.summary = v))} placeholder="Hovedinntrykk, positive funn og hva som bør følges opp" />
+              <SaveOnBlur key={`${round.id}-r-summary`} id="r-summary" multiline value={round.summary} onSave={(v) => update((r) => void (r.summary = v))} placeholder="Hovedinntrykk, positive funn og hva som bør følges opp" />
             </Field>
           </>
         )}
@@ -384,7 +389,9 @@ export function ReportScreen({ id }: { id?: string }) {
             variant="ghost"
             size="sm"
             onClick={async () => {
-              if (await ask('Åpne runden for endringer igjen? Signaturene beholdes.', { confirmLabel: 'Åpne' })) update((r) => void (r.finishedAt = null))
+              if (!(await ask('Åpne runden for endringer igjen? Signaturene beholdes.', { confirmLabel: 'Åpne' }))) return
+              if (await reopenRound(round)) go('/')
+              else toast('Du har allerede en påbegynt runde på denne sjekklisten. Fullfør eller nullstill den først.')
             }}
           >
             <LockOpen size={16} /> Åpne for endringer
@@ -401,14 +408,50 @@ export function ReportScreen({ id }: { id?: string }) {
         </>
       )}
 
-      {!locked && (
-        <LinkButton href={`#/runde/${round.id}`} variant="ghost" size="sm">
-          Tilbake til runden
-        </LinkButton>
-      )}
+      <History currentId={round.id} />
 
       {preview && <PdfPreview round={round} settings={settings} onClose={() => setPreview(false)} />}
     </AppShell>
+  )
+}
+
+function History({ currentId }: { currentId: string }) {
+  const rounds = useLiveQuery(async () => (await db.rounds.orderBy('startedAt').reverse().toArray()).filter((r) => r.finishedAt && r.templateId), [])
+  const list = rounds?.filter((r) => r.id !== currentId) ?? []
+  if (!rounds) return null
+  return (
+    <Card className="flex flex-col gap-3">
+      <SectionTitle icon={<ClockCounterClockwise size={20} weight="bold" className="text-orange-500" />} action={<span className="font-mono text-xs text-slate-500">{rounds.length} lagret</span>}>
+        Tidligere rapporter
+      </SectionTitle>
+      {list.length === 0 && <p className="rounded-xl bg-slate-50 p-4 text-center text-sm text-slate-500 dark:bg-oled/60 dark:text-slate-400">Fullførte runder havner her, og kan åpnes, deles og lastes ned senere.</p>}
+      {list.map((r) => {
+        const st = roundStats(r.areas)
+        return (
+          <div key={r.id} className="flex items-center gap-2 rounded-xl border border-slate-200 p-2.5 dark:border-slate-800">
+            <a href={`#/rapport/${r.id}`} className="flex min-w-0 flex-1 flex-col gap-0.5 no-underline">
+              <span className="truncate text-sm font-bold text-slate-900 dark:text-white">{r.title}</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                {formatDate(r.startedAt)} · {st.score}% OK · {st.avvik} avvik
+              </span>
+            </a>
+            <button
+              type="button"
+              aria-label={`Slett rapporten ${r.title}`}
+              onClick={async () => {
+                if (await ask(`Slette rapporten «${r.title}» for godt? Bilder og avvik i den forsvinner også.`, { confirmLabel: 'Slett', danger: true })) {
+                  await deleteRound(r.id)
+                  toast('Rapporten er slettet')
+                }
+              }}
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
+            >
+              <Trash size={18} />
+            </button>
+          </div>
+        )
+      })}
+    </Card>
   )
 }
 

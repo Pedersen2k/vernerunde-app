@@ -72,12 +72,12 @@ export function findItem(round: Round, itemId: string) {
 export const EXTRA_AREA = 'Andre funn'
 
 /** Legger til et fritt punkt (f.eks. et avvik som ikke står på sjekklista) og returnerer id-en. */
-export async function addExtraItem(roundId: string, text: string) {
+export async function addExtraItem(roundId: string, text: string, areaName: string = EXTRA_AREA) {
   const id = `extra-${uid()}`
   await mutateRound(roundId, (r) => {
-    let area = r.areas.find((a) => a.name === EXTRA_AREA)
+    let area = r.areas.find((a) => a.name === areaName)
     if (!area) {
-      area = { id: uid(), name: EXTRA_AREA, comment: '', items: [] }
+      area = { id: uid(), name: areaName, comment: '', items: [] }
       r.areas.push(area)
     }
     area.items.push({ id, text, status: null, comment: '', photoIds: [] })

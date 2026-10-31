@@ -3,17 +3,18 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useRef, useState } from 'react'
 import { db, uid } from '../db'
 import { dueFor, dueLabel, newDeviation, SEVERITY } from '../lib/deviations'
-import { compressImage } from '../lib/image'
+import { compressImage, stampText } from '../lib/image'
 import { addExtraItem, EXTRA_AREA, findItem, mutateItem } from '../lib/rounds'
 import { responsibleOptions, useSettings } from '../lib/settings'
 import { listen, speechSupported } from '../lib/speech'
 import type { Deviation, Round, Severity } from '../types'
+import { CriticalNotice } from './CriticalNotice'
 import { PhotoStrip } from './Photos'
 import { Sheet } from './Sheet'
 import { toast } from './Toast'
 import { Button, cx, Field, inputClass } from './ui'
 
-export type FindingTarget = { round: Round | null; itemId: string | null; kind: 'avvik' | 'merknad' }
+export type FindingTarget = { round: Round | null; itemId: string | null; kind: 'avvik' | 'merknad'; onSaved?: () => void }
 
 /** Registrering av avvik eller merknad: bilde, beskrivelse, alvorlighetsgrad, frist og ansvarlig. */
 export function FindingSheet({ target, onClose }: { target: FindingTarget | null; onClose: () => void }) {
@@ -47,7 +48,9 @@ function sheetTitle(t: FindingTarget) {
 
 function FindingForm({ target, onClose }: { target: FindingTarget; onClose: () => void }) {
   const settings = useSettings()
-  const existing = target.round && target.itemId ? findItem(target.round, target.itemId)?.item : undefined
+  const found = target.round && target.itemId ? findItem(target.round, target.itemId) : null
+  const existing = found?.item
+  const zoneName = found?.area.name ?? 'Utenfor sjekkliste'
   const tempRoundId = useRef(target.round?.id ?? `standalone-${uid()}`)
   const [title, setTitle] = useState('')
   const [comment, setComment] = useState(existing?.comment ?? '')
@@ -86,7 +89,7 @@ function FindingForm({ target, onClose }: { target: FindingTarget; onClose: () =
     try {
       const ids: string[] = []
       for (const f of Array.from(files)) {
-        const blob = await compressImage(f)
+        const blob = await compressImage(f, 1600, 0.8, 'image/jpeg', stampText(zoneName))
         const id = uid()
         await db.photos.add({ id, roundId: tempRoundId.current, blob, createdAt: Date.now() })
         ids.push(id)
@@ -145,6 +148,7 @@ function FindingForm({ target, onClose }: { target: FindingTarget; onClose: () =
     saved.current = true
     toast(isAvvik ? 'Avviket er lagret' : 'Merknaden er lagret')
     onClose()
+    target.onSaved?.()
   }
 
   const needsTitle = !target.itemId
@@ -189,6 +193,24 @@ function FindingForm({ target, onClose }: { target: FindingTarget; onClose: () =
         <input ref={galleryInput} id="finding-gallery" type="file" accept="image/*" multiple hidden onChange={(e) => addPhotos(e.target.files)} />
         {photoIds.length > 0 && <p className="text-xs text-slate-500 dark:text-slate-400">Trykk på et bilde for å markere funnet med rød strek.</p>}
       </div>
+
+      {settings && settings.quickTags.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">Hurtigtekst (trykk for å sette inn)</span>
+          <div className="flex flex-wrap gap-1.5">
+            {settings.quickTags.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setComment((c) => (c ? `${c.trimEnd()}. ${t}` : t))}
+                className="rounded-xl border border-slate-300 bg-slate-100 px-2.5 py-1.5 text-xs font-bold text-slate-700 active:scale-95 dark:border-slate-700 dark:bg-cardElevated dark:text-slate-300"
+              >
+                + {t}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <Field
         label={isAvvik ? 'Beskrivelse av avvik og foreslått tiltak' : 'Beskrivelse'}
@@ -254,6 +276,8 @@ function FindingForm({ target, onClose }: { target: FindingTarget; onClose: () =
               })}
             </div>
           </div>
+
+          {deviation.severity === 'kritisk' && <CriticalNotice />}
 
           <Field label="Tildel ansvarlig">
             {customResp || options.length === 0 ? (

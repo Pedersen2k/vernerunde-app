@@ -23,7 +23,7 @@ export function Sheet({ open, onClose, title, badge, children }: { open: boolean
         aria-modal="true"
         aria-label={title}
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[92dvh] w-full max-w-lg animate-sheet-up flex-col rounded-t-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900 sm:rounded-3xl"
+        className="flex max-h-[92dvh] w-full max-w-lg animate-sheet-up flex-col rounded-t-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-cardDark sm:rounded-3xl"
       >
         <div className="flex items-center gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-700/70">
           {badge}

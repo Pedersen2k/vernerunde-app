@@ -1,7 +1,7 @@
-import { CheckCircle, Warning } from '@phosphor-icons/react'
+import { CheckCircle, Plus, Warning } from '@phosphor-icons/react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
-import { AppShell } from '../components/AppShell'
+import { AppShell, openQuickFinding } from '../components/AppShell'
 import { DeviationCard } from '../components/DeviationCard'
 import { cx, Empty } from '../components/ui'
 import { db } from '../db'
@@ -22,12 +22,18 @@ export function DeviationsScreen() {
   const list = tab === 'open' ? open : done
 
   return (
-    <AppShell tab="none">
-      <div>
-        <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Avvik og tiltak</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">{overdue > 0 ? `${overdue} avvik har passert fristen.` : 'Alle avvik fra rundene samlet, med frist og ansvarlig.'}</p>
+    <AppShell tab="avvik">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <p className="text-[0.65rem] font-extrabold uppercase tracking-wider text-orange-600 dark:text-orange-400">Tiltaksliste</p>
+          <h1 className="font-display text-xl font-extrabold text-slate-900 dark:text-white">Åpne avvik og oppfølging</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{overdue > 0 ? `${overdue} avvik har passert fristen.` : 'Alle avvik samlet, med frist og ansvarlig.'}</p>
+        </div>
+        <button type="button" onClick={openQuickFinding} className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl bg-red-600 px-3.5 text-sm font-bold text-white shadow-lg shadow-red-600/30 active:scale-95">
+          <Plus size={18} weight="bold" /> Nytt avvik
+        </button>
       </div>
-      <div className="grid grid-cols-2 gap-1 rounded-xl bg-slate-200/70 p-1 dark:bg-slate-800" role="tablist">
+      <div className="grid grid-cols-2 gap-1 rounded-xl bg-slate-200/70 p-1 dark:bg-cardDark" role="tablist">
         {(
           [
             ['open', `Åpne (${open.length})`],
@@ -40,7 +46,7 @@ export function DeviationsScreen() {
             role="tab"
             aria-selected={tab === k}
             onClick={() => setTab(k)}
-            className={cx('min-h-10 rounded-lg text-sm font-bold transition', tab === k ? 'bg-white text-slate-900 shadow dark:bg-slate-700 dark:text-white' : 'text-slate-500 dark:text-slate-400')}
+            className={cx('min-h-10 rounded-lg text-sm font-bold transition', tab === k ? 'bg-white text-slate-900 shadow dark:bg-cardElevated dark:text-white' : 'text-slate-500 dark:text-slate-400')}
           >
             {label}
           </button>

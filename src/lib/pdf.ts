@@ -258,6 +258,23 @@ export async function buildReportPdf(round: Round, settings: OrgSettings): Promi
     y += 4
   }
 
+  // ---- Oppfølging ----
+  if (round.areas.some((a) => a.items.some((i) => i.status === 'avvik'))) {
+    ensure(30)
+    text('OPPFØLGING AV AVVIK', M, 9, 'bold', [71, 85, 105])
+    y += 2.5
+    rule()
+    y += 6
+    const follow =
+      'Leder bes bekrefte mottak av rapporten og gi skriftlig tilbakemelding på hvilke tiltak som iverksettes for avvikene, innen fristene som er angitt. Avvik som ikke er lukket ved fristen følges opp overfor ledelsen og kan tas opp i arbeidsmiljøutvalget (AMU). Ved overhengende fare for liv eller helse kan verneombudet stanse arbeidet, jf. arbeidsmiljøloven § 6-3.'
+    for (const l of wrap(follow, CW, 9.5)) {
+      ensure(5)
+      text(l, M, 9.5, 'normal', [51, 65, 85])
+      y += 4.6
+    }
+    y += 4
+  }
+
   // ---- Signaturer ----
   ensure(48)
   y += 2
@@ -313,54 +330,4 @@ export async function buildReportPdf(round: Round, settings: OrgSettings): Promi
   }
 
   return doc.output('blob')
-}
-
-type Downloads = { save(r: { filename: string; data: Blob }): Promise<unknown> }
-
-/** I forhåndsvisningen på claude.ai går nedlasting via vertens egen lagringsdialog. */
-async function hostDownloads(): Promise<Downloads | null> {
-  if (window.self === window.top) return null
-  const c = (window as unknown as { claude?: { use?: (n: string) => Promise<unknown> } }).claude
-  if (!c?.use) return null
-  try {
-    return (await c.use('downloads')) as Downloads | null
-  } catch {
-    return null
-  }
-}
-
-/** Deler PDF-en via telefonens delingsmeny (e-post, Teams osv.), eller laster den ned. */
-export async function shareOrDownload(blob: Blob, filename: string, title: string): Promise<'shared' | 'downloaded' | 'cancelled' | 'failed'> {
-  const file = new File([blob], filename, { type: 'application/pdf' })
-  const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean }
-  if (nav.canShare?.({ files: [file] })) {
-    try {
-      await nav.share({ files: [file], title, text: title })
-      return 'shared'
-    } catch (e) {
-      if ((e as DOMException).name === 'AbortError') return 'cancelled'
-    }
-  }
-  return (await downloadBlob(blob, filename)) ? 'downloaded' : 'failed'
-}
-
-export async function downloadBlob(blob: Blob, filename: string): Promise<boolean> {
-  const host = await hostDownloads()
-  if (host) {
-    try {
-      await host.save({ filename, data: blob })
-      return true
-    } catch {
-      return false
-    }
-  }
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-  setTimeout(() => URL.revokeObjectURL(url), 10_000)
-  return true
 }

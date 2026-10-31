@@ -7,7 +7,7 @@ export function cx(...parts: (string | false | null | undefined)[]) {
 
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
   return (
-    <div className={cx('rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700/60 dark:bg-slate-800/60 dark:shadow-none', className)}>
+    <div className={cx('rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-cardDark dark:shadow-none', className)}>
       {children}
     </div>
   )

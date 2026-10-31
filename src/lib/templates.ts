@@ -11,6 +11,70 @@ const IK = 'Internkontrollforskriften § 5: Risiko skal kartlegges, og avvik ska
 /** Bransjemaler som følger med appen. Henvisningene er veiledende. */
 export const SEED_TEMPLATES: Seed[] = [
   {
+    name: 'Terminal: vareflyt og feltstruktur',
+    icon: 'lager',
+    areas: [
+      {
+        name: 'Feltstruktur og gulv',
+        points: [
+          ['Oppstillingsfelt respekteres: ingen paller eller bur står utenfor oppmerkede linjer', 'Sikrer fri sikt i kryss og forutsigbar vareflyt. ' + AML_FYSISK],
+          ['Gulvmerking, sone-skilt og fotgjengerfelt er synlige og ikke slitt bort', 'Arbeidsplassforskriften: ferdselsveier skal være tydelig merket.'],
+        ],
+      },
+      {
+        name: 'Vareflyt og kjørebane',
+        points: [
+          ['Hovedkjørebaner for truck og jekketralle er frie for hensatt gods', 'Arbeidsplassforskriften: ferdselsveier skal være frie for hindringer.'],
+          ['Tompaller er stablet i egne felt, ikke over anbefalt høyde og ikke på høykant', 'Forebygging av velt og klemskader. ' + AML_FYSISK],
+          ['Gående og truck er skilt der det er mulig, og krysningspunkter er sikret', AML_FYSISK],
+        ],
+      },
+      {
+        name: 'Brann og rømning',
+        points: [
+          ['Nødutganger, rømningsveier og brannslukkere er frie og ikke blokkert', BRANN],
+          ['Brannslukkere er merket, plombert og kontrollert i tide', BRANN],
+        ],
+      },
+      {
+        name: 'Reoler og sikring',
+        points: [['Pallereoler har intakt stolpevern og ingen synlige påkjørselsskader på bærejern', 'NS-EN 15635: Skadet reol skal avlastes og merkes umiddelbart.']],
+      },
+      {
+        name: 'Truck og lading',
+        points: [
+          ['Ladeområde for truck har hele ladekabler, god ventilasjon og er fritt for papp og plast', BRANN],
+          ['Truckene er kontrollert, og førerne har gyldig opplæring', 'Forskrift om utførelse av arbeid: krav til opplæring og sikker bruk av trucker.'],
+        ],
+      },
+      {
+        name: 'Porter og lasterampe',
+        points: [['Kjøreporter, lasteramper og tetting fungerer uten skader eller fallfare', 'Arbeidsplassforskriften: sikring av lastekaier og ramper. ' + AML_FYSISK]],
+      },
+      {
+        name: 'Orden og renhold',
+        points: [
+          ['Gulv er fritt for løs krympeplast, papprester og væskesøl (skli- og snublefare)', AML_FYSISK],
+          ['Tunge og hyppige løft er vurdert, og løftehjelpemidler er tilgjengelige', 'Forskrift om utførelse av arbeid: krav til manuell håndtering. ' + AML_FYSISK],
+        ],
+      },
+    ],
+  },
+  {
+    name: 'Hurtigsjekk ved skiftstart (2 min)',
+    icon: 'lager',
+    areas: [
+      {
+        name: 'Egen stasjon og nærsone',
+        points: [
+          ['Stasjon, scanner og hjelpemidler er klargjort og ryddet etter forrige skift', AML_FYSISK],
+          ['Gangbane og oppstillingsfelt rundt egen stasjon er frie for hindringer', AML_FYSISK],
+          ['Nærmeste nødutgang og brannslukker i sonen er ublokkert', BRANN],
+        ],
+      },
+    ],
+  },
+  {
     name: 'Lager og logistikk',
     icon: 'lager',
     areas: [
@@ -101,8 +165,8 @@ export function seedTemplates(): Template[] {
     id: uid(),
     name: t.name,
     icon: t.icon,
-    createdAt: now - i,
-    updatedAt: now - i,
+    createdAt: now + i,
+    updatedAt: now + i,
     areas: t.areas.map((a) => ({
       id: uid(),
       name: a.name,

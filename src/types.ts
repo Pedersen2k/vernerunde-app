@@ -89,4 +89,11 @@ export interface OrgSettings {
   logo: Blob | null
   onboarded: boolean
   theme: 'dark' | 'light'
+  /** Sjekklisten som er valgt i toppen av skjermen. */
+  currentTemplateId?: string
+  designMode: DesignMode
+  /** Hurtig-etiketter som brukes ved raske avviksregistreringer. */
+  quickTags: string[]
 }
+
+export type DesignMode = 'deck' | 'zones' | 'camera'
