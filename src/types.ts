@@ -1,4 +1,14 @@
-export type Status = 'ok' | 'avvik' | 'na'
+export type Status = 'ok' | 'merknad' | 'avvik' | 'na'
+
+export type Severity = 'lav' | 'middels' | 'kritisk'
+
+/** Oppfølging av et avvik: alvorlighetsgrad, frist, ansvarlig og om det er utbedret. */
+export interface Deviation {
+  severity: Severity
+  due: number
+  responsible: string
+  resolvedAt: number | null
+}
 
 export interface TemplateCheckpoint {
   id: string
@@ -25,6 +35,7 @@ export interface RoundItem {
   status: Status | null
   comment: string
   photoIds: string[]
+  deviation?: Deviation
 }
 
 export interface RoundArea {

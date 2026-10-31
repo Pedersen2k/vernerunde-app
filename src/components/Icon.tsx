@@ -5,6 +5,8 @@ const PATHS = {
   check: 'M5 12.5l4.5 4.5L19 7.5',
   checkCircle: 'M12 21a9 9 0 100-18 9 9 0 000 18zM8 12.5l2.8 2.8L16.5 9.5',
   warning: 'M12 3.5L2.5 20h19zM12 10v4.5M12 17.2v.3',
+  info: 'M12 21a9 9 0 100-18 9 9 0 000 18zM12 11v5.5M12 7.7v.3',
+  bell: 'M6 16V11a6 6 0 1112 0v5l1.5 2h-15zM10 20.5a2 2 0 004 0',
   minusCircle: 'M12 21a9 9 0 100-18 9 9 0 000 18zM8 12h8',
   camera: 'M4 8h3l2-3h6l2 3h3v11H4zM12 16.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z',
   comment: 'M4 5h16v11H9l-5 4z',

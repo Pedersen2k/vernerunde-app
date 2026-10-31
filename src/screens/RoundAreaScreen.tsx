@@ -5,15 +5,23 @@ import { Header } from '../components/Header'
 import { Icon, type IconName } from '../components/Icon'
 import { Progress } from '../components/Progress'
 import { Photos } from '../components/Photos'
+import { DeviationEditor } from '../components/DeviationEditor'
 import { db, uid } from '../db'
+import { newDeviation } from '../lib/deviations'
 import { mutateRound, roundStats } from '../lib/rounds'
 import type { RoundArea, RoundItem, Status } from '../types'
 
 const STATUS: { value: Status; label: string; icon: IconName }[] = [
   { value: 'ok', label: 'OK', icon: 'checkCircle' },
+  { value: 'merknad', label: 'Merknad', icon: 'info' },
   { value: 'avvik', label: 'Avvik', icon: 'warning' },
   { value: 'na', label: 'Ikke relevant', icon: 'minusCircle' },
 ]
+
+const PLACEHOLDER: Partial<Record<Status, string>> = {
+  avvik: 'Beskriv avviket og forslag til tiltak',
+  merknad: 'Hva bør følges med på?',
+}
 
 function ItemCard({
   roundId,
@@ -32,7 +40,7 @@ function ItemCard({
 }) {
   const hasExtra = item.comment !== '' || item.photoIds.length > 0
   const [open, setOpen] = useState(false)
-  const showDetails = open || hasExtra || item.status === 'avvik'
+  const showDetails = open || hasExtra || item.status === 'avvik' || item.status === 'merknad'
 
   return (
     <article className={`card item item-${item.status ?? 'none'}`}>
@@ -52,11 +60,12 @@ function ItemCard({
             onClick={() =>
               onUpdate((i) => {
                 i.status = i.status === s.value ? null : s.value
+                if (i.status === 'avvik' && !i.deviation) i.deviation = newDeviation()
               })
             }
           >
-            <Icon name={s.icon} size={18} stroke={2.2} />
-            {s.label}
+            <Icon name={s.icon} size={20} stroke={2.1} />
+            <span>{s.label}</span>
           </button>
         ))}
       </div>
@@ -68,11 +77,23 @@ function ItemCard({
           ) : (
             <CommentField
               value={item.comment}
-              placeholder={item.status === 'avvik' ? 'Beskriv avviket og forslag til tiltak' : 'Kommentar'}
+              placeholder={(item.status && PLACEHOLDER[item.status]) || 'Kommentar'}
               rows={2}
               onSave={(v) =>
                 onUpdate((i) => {
                   i.comment = v
+                })
+              }
+            />
+          )}
+          {item.status === 'avvik' && item.deviation && (
+            <DeviationEditor
+              itemId={item.id}
+              deviation={item.deviation}
+              locked={locked}
+              onChange={(d) =>
+                onUpdate((i) => {
+                  i.deviation = d
                 })
               }
             />
@@ -179,6 +200,21 @@ export function RoundAreaScreen({ roundId, areaId }: { roundId: string; areaId: 
             }
           />
         ))}
+
+        {!locked && stats.checked < stats.total && (
+          <button
+            type="button"
+            className="btn btn-block"
+            onClick={() =>
+              updateArea((a) => {
+                for (const i of a.items) if (!i.status) i.status = 'ok'
+              })
+            }
+          >
+            <Icon name="checkCircle" size={20} />
+            Merk resten som OK ({stats.total - stats.checked})
+          </button>
+        )}
 
         {!locked && (
           <form

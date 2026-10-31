@@ -2,6 +2,7 @@ import { BrandStyle } from './components/BrandStyle'
 import { ConfirmHost } from './components/ConfirmDialog'
 import { useRoute } from './lib/router'
 import { useSettings } from './lib/settings'
+import { Deviations } from './screens/Deviations'
 import { Home } from './screens/Home'
 import { NewRound } from './screens/NewRound'
 import { RoundAreaScreen } from './screens/RoundAreaScreen'
@@ -29,6 +30,7 @@ function Screen() {
   if (!settings) return null
   if (!settings.onboarded) return <Welcome settings={settings} />
   if (a === 'innstillinger') return <Settings />
+  if (a === 'avvik') return <Deviations />
   if (a === 'maler' && b) return <TemplateEditor id={b} />
   if (a === 'maler') return <Templates />
   if (a === 'ny') return <NewRound />

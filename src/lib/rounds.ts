@@ -2,7 +2,7 @@ import { db, uid } from '../db'
 import type { Round, RoundArea, Template } from '../types'
 
 export function roundStats(areas: RoundArea[]) {
-  let total = 0, checked = 0, avvik = 0, ok = 0, na = 0
+  let total = 0, checked = 0, avvik = 0, ok = 0, na = 0, merknad = 0
   for (const a of areas) {
     for (const i of a.items) {
       total++
@@ -10,9 +10,10 @@ export function roundStats(areas: RoundArea[]) {
       if (i.status === 'avvik') avvik++
       if (i.status === 'ok') ok++
       if (i.status === 'na') na++
+      if (i.status === 'merknad') merknad++
     }
   }
-  return { total, checked, avvik, ok, na }
+  return { total, checked, avvik, ok, na, merknad }
 }
 
 export async function startRound(template: Template, title: string, location: string, participants: string) {

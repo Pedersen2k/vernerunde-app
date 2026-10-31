@@ -6,6 +6,7 @@ import { Logo } from '../components/Logo'
 import { Ring } from '../components/Ring'
 import { db } from '../db'
 import { formatDate } from '../lib/format'
+import { deviationCounts } from '../lib/deviations'
 import { roundStats } from '../lib/rounds'
 import { useSettings } from '../lib/settings'
 import type { Round } from '../types'
@@ -59,8 +60,8 @@ export function Home() {
   const rounds = useLiveQuery(() => db.rounds.orderBy('startedAt').reverse().toArray(), [])
   const active = rounds?.filter((r) => !r.finishedAt) ?? []
   const done = rounds?.filter((r) => r.finishedAt) ?? []
-  const openAvvik = rounds?.reduce((n, r) => n + roundStats(r.areas).avvik, 0) ?? 0
   const [now] = useState(() => new Date())
+  const dev = deviationCounts(rounds ?? [], now.getTime())
   const year = now.getFullYear()
   const doneThisYear = done.filter((r) => new Date(r.finishedAt!).getFullYear() === year).length
   const firstName = settings?.inspectorName.split(' ')[0]
@@ -84,21 +85,20 @@ export function Home() {
               : 'Klar for neste vernerunde?'}
           </p>
           <div className="hero-stats">
-            <div>
-              <strong>{active.length}</strong>
-              <span>pågående</span>
-            </div>
-            <div>
-              <strong>{openAvvik}</strong>
-              <span>avvik registrert</span>
-            </div>
+            <a href="#/avvik">
+              <strong>{dev.open}</strong>
+              <span>åpne avvik</span>
+            </a>
+            <a href="#/avvik" className={dev.overdue > 0 ? 'stat-late' : ''}>
+              <strong>{dev.overdue}</strong>
+              <span>forfalt</span>
+            </a>
             <div>
               <strong>{doneThisYear}</strong>
-              <span>fullført i {year}</span>
+              <span>runder i {year}</span>
             </div>
           </div>
         </div>
-        <div className="hazard" aria-hidden="true" />
       </section>
 
       <main className="content content-under-hero">
